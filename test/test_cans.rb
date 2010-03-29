@@ -3,79 +3,49 @@ require 'helper'
 class CansTest < Test::Unit::TestCase
   context "Class with Canable::Cans included" do
     setup do
-      klass = Doc do
-        include Canable::Cans
+      klass = Class.new do
+        include Canable::Cans          
       end
       
-      @user = klass.create(:name => 'John')
+      @user = klass.new
+      @resource = mock('resource')
+    end
+    
+    should "default viewable_by? to false" do
+      assert ! @user.can_view?(@resource)
     end
 
-    context "can_view?" do
-      should "be true if resource is viewable_by?" do
-        resource = mock('resource', :viewable_by? => true)
-        assert @user.can_view?(resource)
-      end
-
-      should "be false if resource is not viewable_by?" do
-        resource = mock('resource', :viewable_by? => false)
-        assert ! @user.can_view?(resource)
-      end
-
-      should "be false if resource is blank" do
-        assert ! @user.can_view?(nil)
-        assert ! @user.can_view?('')
-      end
+    should "default creatable_by? to false" do
+      assert ! @user.can_create?(@resource)
     end
 
-    context "can_create?" do
-      should "be true if resource is creatable_by?" do
-        resource = mock('resource', :creatable_by? => true)
-        assert @user.can_create?(resource)
-      end
-
-      should "be false if resource is not creatable_by?" do
-        resource = mock('resource', :creatable_by? => false)
-        assert ! @user.can_create?(resource)
-      end
-
-      should "be false if resource is blank" do
-        assert ! @user.can_create?(nil)
-        assert ! @user.can_create?('')
-      end
+    should "default updatable_by? to false" do
+      assert ! @user.can_update?(@resource)
     end
 
-    context "can_update?" do
-      should "be true if resource is updatable_by?" do
-        resource = mock('resource', :updatable_by? => true)
-        assert @user.can_update?(resource)
-      end
-
-      should "be false if resource is not updatable_by?" do
-        resource = mock('resource', :updatable_by? => false)
-        assert ! @user.can_update?(resource)
-      end
-
-      should "be false if resource is blank" do
-        assert ! @user.can_update?(nil)
-        assert ! @user.can_update?('')
-      end
+    should "default destroyable_by? to false" do
+      assert ! @user.can_destroy?(@resource)
     end
-
-    context "can_destroy?" do
-      should "be true if resource is destroyable_by?" do
-        resource = mock('resource', :destroyable_by? => true)
-        assert @user.can_destroy?(resource)
+  end
+  
+  context "Class that overrides a can method" do
+    setup do
+      klass = Doc do
+        include Canable::Cans
+        
+        def can_view?(resource)
+          resource.owner == 'John'
+        end
       end
-
-      should "be false if resource is not destroyable_by?" do
-        resource = mock('resource', :destroyable_by? => false)
-        assert ! @user.can_destroy?(resource)
-      end
-
-      should "be false if resource is blank" do
-        assert ! @user.can_destroy?(nil)
-        assert ! @user.can_destroy?('')
-      end
+      
+      @user = klass.new
+      @johns     = mock('resource', :owner => 'John')
+      @steves    = mock('resource', :owner => 'Steve')
+    end
+    
+    should "use the overriden method and default to false" do
+      assert @user.can_view?(@johns)
+      assert ! @user.can_view?(@steves)
     end
   end
 end

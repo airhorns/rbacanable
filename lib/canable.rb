@@ -6,6 +6,72 @@ module Canable
 
   # Module that holds all the [method]able_by? methods.
   module Ables; end
+  
+  # Module that is included by a role implementation
+  module Role
+    include Cans # each role has a distinct set of responses to all the can_action? methods
+    
+    def self.included(base)
+      base.extend(ClassMethods)
+    end
+    
+    # These are applied to the actual Role module 'instance' that includes this (Canable::Role) module 
+    module ClassMethods
+      # Each role has a default query response, found in this variable
+      attr_accessor :_default_response
+      
+      
+      # Called when another Role imeplementation module tries to inherit an existing Role implementation
+      # Notice this method isn't self.included, this method becomes self.included on the module including this (Canable::Role) module
+      # This is nesscary to emulate inhertance of the default response and any other variables in the future
+      def included(base)
+        base._default_response = self._default_response
+      end
+      
+      # Called when an Actor decides its role and extends itself (an instance) with a Role implementation
+      # Creates the default instance methods for an Actor and persists the can_action? response default down
+      def extended(base)
+        base.extend(RoleEnabledCanInstanceMethods)
+        this_role = self # can't use self inside the instance eval
+        base.instance_eval { @_canable_role = this_role }
+      end
+      
+      # Methods given to an instance of an Actor
+      module RoleEnabledCanInstanceMethods
+        def _canable_default # the role default response
+          @_canable_role._default_response
+        end
+      end
+      
+      # ----------------------
+      # Role building DSL
+      # ----------------------
+      def default_response(val)
+        self._default_response = val
+      end
+    end
+  end
+  
+  module Actor
+    # ---------------
+    # RBAC Actor building DSL
+    # ---------------
+    
+    # Sets the role of this actor by including a role module
+    def role(role=nil)
+      role ||= @role if @role
+      self.extend Canable::Roles.const_get((role.to_s.capitalize+"Role").intern)
+    end
+  end
+  
+  # Holds all the different roles that an actor may assume
+  module Roles
+    # Make one default role that is false for everything
+    module Role
+      include Canable::Role
+      default_response false
+    end
+  end
 
   # Module that holds all the enforce_[action]_permission methods for use in controllers.
   module Enforcers
@@ -38,25 +104,30 @@ module Canable
   #   @param [Symbol] resource_method The name of the [resource_method]_by? method.
   def self.add(can, able)
     @actions[can] = able
-    add_can_method(can, able)
-    add_able_method(able)
+    add_can_method(can)
+    add_able_method(can, able)
     add_enforcer_method(can)
   end
 
   private
-    def self.add_can_method(can, able)
+    def self.add_can_method(can)
       Cans.module_eval <<-EOM
         def can_#{can}?(resource)
-          return false if resource.blank?
-          resource.#{able}_by?(self)
+          method = ("can_#{can}_"+resource.class.to_s.downcase+"?").intern
+          if self.respond_to?(method, true)
+            self.send method, resource
+          else
+            self._canable_default
+          end
         end
       EOM
     end
 
-    def self.add_able_method(able)
+    def self.add_able_method(can, able)
       Ables.module_eval <<-EOM
         def #{able}_by?(user)
-          true
+          return false if user.nil?
+          user.can_#{can}?(self)
         end
       EOM
     end
