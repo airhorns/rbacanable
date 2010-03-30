@@ -7,6 +7,11 @@ require 'terminal-table/import'
 
 
 module Canable::Roles
+  module BasicRole
+    include Canable::Role
+    default_response false
+  end
+  
   module EmployeeRole
     include Canable::Role
     default_response false
@@ -42,11 +47,14 @@ end
 class User
   include Canable::Actor
   attr_accessor :name
-    
+  
+  default_role Canable::Roles::BasicRole
+  # role_attribute :@role -- RBACanable by default looks in @role for a Module constant or string to use as a role
+  
   def initialize(attributes = {})
     @name = attributes[:name]
     @role = attributes[:role]
-    role
+    self.__initialize_canable_role # nessecary since initialize is overridden
   end
   
   def to_s
@@ -70,7 +78,8 @@ end
 users = [
   User.new(:name => "John", :role => :employee),
   User.new(:name => "Steve", :role => :manager),
-  User.new(:name => "Harry", :role => :admin)
+  User.new(:name => "Harry", :role => :admin),
+  User.new(:name => "Jim")
 ]
 
 posts = [
@@ -79,30 +88,12 @@ posts = [
   Article.new(:creator => "Harry")
 ]
 
-def check_method(obj, regex=nil)
-  regex ||= /canable|lol|test|extended/
-  puts obj
-  puts obj.methods.sort.grep(regex)
-  puts obj._canable_default if obj.respond_to?(:_canable_default)
-  puts 
-end
-
-check_method(users.first)
-check_method(users.first.class)
-check_method(users.first.class.class)
-
-puts
-
-check_method(Canable::Roles::EmployeeRole)
-check_method(Canable::Roles::ManagerRole)
-check_method(Canable::Roles::AdminRole)
-
 
 user_table = table do |t|
-  t.headings = "User", "Resource", "Can View?", "Can Create?", "Can Update?", "Can Destroy?"
+  t.headings = "User", "Resource", "Can View?", "Can Create?", "Can Update?", "Can Destroy?", "Role"
   users.each do |user|
     posts.each do |post|
-      t << [user.to_s, post.to_s, user.can_view?(post), user.can_create?(post), user.can_update?(post), user.can_destroy?(post)]
+      t << [user.to_s, post.to_s, user.can_view?(post), user.can_create?(post), user.can_update?(post), user.can_destroy?(post), user.canable_included_role]
     end
   end
 end

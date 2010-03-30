@@ -1,4 +1,5 @@
 require 'test/unit'
+require 'rubygems'
 
 gem 'mocha', '0.9.8'
 gem 'shoulda', '2.10.3'

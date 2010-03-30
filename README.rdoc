@@ -1,28 +1,41 @@
-= Canable
+= RBACanable 
+=== Canable (by John Nunemaker) with a Role Based Access System 
 
-Simple permissions that I have used on my last several projects so I figured it was time to abstract and wrap up into something more easily reusable.
+Simple permissions system that features easily created resources, actors, and roles to define the interactions between them.
 
-== Cans
+== Actors
 
-Whatever class you want all permissions to run through should include Canable::Cans.
+Whatever class(es) you want all permissions to run through should include <tt>Canable::Actor</tt>, instead of <tt>Canable::Cans</tt> from the original Canable gem.
 
-    class User
-      include MongoMapper::Document
-      include Canable::Cans
+    class User > ActiveRecord::Base
+      include Canable::Actor
+	  default_role :employee
     end
 
-This means that an instance of a user automatically gets can methods for the default REST actions: can_view?(resource), can_create?(resource), can_update?(resource), can_destroy?(resource).
+Actors represent objects in the system that want to preform an action. An actor's abilities are defined by the role(s) it plays, which is set by 
 
+== Roles
+
+The rules that govern your actors are defined in modules extending <tt>Canable::Role</tt> and/or each other.
+
+	module EmployeeRole
+	  include Canable::Role
+	  default_response false
+	end
+	
+	module ManagerRole
+	  include Canable::Role
+	  default_response true
+	end
+	
 == Ables
-
-Each of the can methods simply calls the related "able" method (viewable, creatable, updatable, destroyable) for the action (view, create, update, delete). Canable comes with defaults for this methods that you can then override as makes sense for your permissions.
 
     class Article
       include MongoMapper::Document
       include Canable::Ables
     end
 
-Including Canable::Ables adds the able methods to the class including it. In this instance, article now has viewable_by?(user), creatable_by?(user), updatable_by?(user) and destroyable_by?(user).
+Including Canable::Ables adds the able methods to the class including it. In this instance, any article instance now has viewable_by?(actor), creatable_by?(actor), updatable_by?(actor) and destroyable_by?(actor). Now
 
 Lets say an article can be viewed and created by anyone, but only updated or destroyed by the user that created the article. To do that, you could leave viewable_by? and creatable_by? alone as they default to true and just override the other methods.
 

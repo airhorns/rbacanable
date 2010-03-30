@@ -19,7 +19,7 @@ class RolesTest < Test::Unit::TestCase
         end
             
         @user = userklass.new
-        @user.role roleklass
+        @user.act roleklass
       end
     
       should "default viewable_by? to true" do
@@ -51,7 +51,7 @@ class RolesTest < Test::Unit::TestCase
         end
             
         @user = userklass.new
-        @user.role roleklass
+        @user.act roleklass
       end
     
       should "default viewable_by? to false" do
@@ -88,7 +88,7 @@ class RolesTest < Test::Unit::TestCase
         end
             
         @user = userklass.new
-        @user.role roleklass
+        @user.act roleklass
       end
     
       should "default viewable_by? to true" do
@@ -108,6 +108,80 @@ class RolesTest < Test::Unit::TestCase
       end
     end
     
+  end
+  
+  context "With several roles" do
+    setup do
+      @role1klass = Module.new do
+        include Canable::Role
+        default_response true
+      end
+      
+      @role2klass = Module.new do
+        include Canable::Role
+        default_response false
+      end
+      
+      @resource = mock('resource');
+    end
+    
+    context "and actors with a default role" do
+      setup do
+        role1klass = @role1klass
+        userklass = Class.new do
+          include Canable::Actor
+          default_role role1klass
+          
+          def initialize(role=nil)
+            @role = role
+            self.__initialize_canable_role # nessecary since initialize is overridden
+          end
+        end
+        
+        @default_user = userklass.new
+        @nondefault_user = userklass.new(@role2klass)
+      end
+      
+      should "have included the correct roles" do
+        assert_equal @role1klass, @default_user.canable_included_role
+        assert_equal @role2klass, @nondefault_user.canable_included_role 
+      end
+      
+      should "be governed by the rules in their roles" do
+        assert @default_user.can_view?(@resource)
+        assert ! @nondefault_user.can_view?(@resource)
+      end
+      
+    end
+    
+    context "and actors with a default role and non standard role attribute" do
+      setup do
+        role1klass = @role1klass
+        userklass = Class.new do
+          include Canable::Actor
+          default_role role1klass
+          role_attribute :@nonstandard
+          
+          def initialize(role=nil)
+            @nonstandard = role
+            self.__initialize_canable_role # nessecary since initialize is overridden
+          end
+        end
+        
+        @default_user = userklass.new
+        @nondefault_user = userklass.new(@role2klass)
+      end
+      
+      should "have included the correct roles" do
+        assert_equal @role1klass, @default_user.canable_included_role
+        assert_equal @role2klass, @nondefault_user.canable_included_role 
+      end
+      
+      should "be governed by the rules in their roles" do
+        assert @default_user.can_view?(@resource)
+        assert ! @nondefault_user.can_view?(@resource)
+      end
+    end
   end
   
   context "With several users with specific Canable::Roles inherited and included" do
@@ -170,7 +244,8 @@ class RolesTest < Test::Unit::TestCase
           include Canable::Actor 
           def initialize(_name, _role)
             @name = _name
-            role _role
+            @role = _role
+            self.__initialize_canable_role # nessecary since initialize is overridden
           end         
         end
             

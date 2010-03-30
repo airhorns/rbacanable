@@ -53,13 +53,50 @@ module Canable
   end
   
   module Actor
-    # ---------------
-    # RBAC Actor building DSL
-    # ---------------
+    attr_accessor :canable_included_role
+
+    def self.included(base)
+      base.extend(ClassMethods)
+    end
+    
+    module ClassMethods
+      attr_accessor :canable_default_role
+      attr_accessor :canable_role_attribute
+      # ---------------
+      # RBAC Actor building DSL
+      # ---------------
+      
+      def default_role(role)
+        self.canable_default_role = role
+      end
+      
+      def role_attribute(attribute)
+        self.canable_role_attribute = attribute
+      end
+      
+    end
+    
+    def initialize(*args)
+      super(*args)
+      self.__initialize_canable_role
+      self
+    end
+    
+    def __initialize_canable_role
+      attribute = self.class.canable_role_attribute
+      attribute ||= :@role
+      role_constant = self.instance_variable_get(attribute)
+      if role_constant == nil
+        default_role = self.class.canable_default_role
+        self.act(default_role) unless default_role == nil
+      else
+        self.act(role_constant)
+      end
+    end
     
     # Sets the role of this actor by including a role module
-    def role(role=nil)
-      role ||= @role if @role
+    def act(role)
+      self.canable_included_role = role
       if(role.respond_to?(:included))
         self.extend role
       else
