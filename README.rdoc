@@ -1,7 +1,58 @@
 = RBACanable 
-=== Canable (by John Nunemaker) with a Role Based Access System 
+=== Canable (by John Nunemaker) with a Role Based Access System latched on
 
-Simple permissions system that features easily created resources, actors, and roles to define the interactions between them.
+Simple permissions system that features easily actors, resources for actors to manipulate, and roles actors play to define their permissions.
+
+
+== Ables
+
+Ables are the resource objets that an actor will want to manipulate.
+
+    class Article
+      include MongoMapper::Document
+      include Canable::Ables
+    end
+
+Including Canable::Ables adds the able methods to the class including it. In this instance, any article instance now has viewable_by?(actor), creatable_by?(actor), updatable_by?(actor) and destroyable_by?(actor).
+
+== Roles
+
+The rules that govern your actors are defined in roles. Roles are modules that extend <tt>Canable::Role</tt> and/or other roles. Roles can be nested as deep and mixed and matched using Ruby's mixin system, as they are just normal Ruby modules that carry permission sets with them. The order they are included in each other will define the final permission set of the role: Roles included after (on a lower line) than others will override the settings of the others.
+	module Canable::Roles
+  	  module EmployeeRole
+  	    include Canable::Role
+  	    default_response false
+    
+	    def can_view_article?(article)
+	      true
+	    end 
+
+	    def can_update_article?(article)
+		  article.owner == @name
+	    end
+  
+	    def can_destroy_article?(article)
+	      self.can_update_article?(article)
+	    end
+	  end
+
+	  module ManagerRole
+	    include Canable::Role
+	    include EmployeeRole
+
+	    def can_update_article?(article)
+	      true
+	    end
+  
+	    def can_destroy_article(article)
+	      article.owner == @name
+	    end
+	  end
+	end
+
+Here two roles are defined, one for employees and one for managers. Employees by default can't do anything, this is set by <tt>default_response false</tt> on the module. Then methods governing the actor's interaction with the Article model by defining the <tt>can_view_article?</tt> to always return true (Employees can view any article), and defining the <tt>can_update_article?</tt> method to only return true if the actor playing the employee role is the owner of the article. 
+
+The manager role includes the employee role, so it inherits the default_response behaviour of false and the defined rules for interactions with articles. Here, the <tt>can_update_article?</tt> method is override to always return true, so managers can edit any article. Note that <tt>EmployeeRole#can_destroy_article?(article)</tt> calls <tt>self.can_update_article?(article)</tt>, so when the ManagerRole inherits the EmployeeRole, <tt>ManagerRole#can_destroy_article?(article)</tt> returns the result of <tt>ManagerRole#can_update_article?(article)</tt>, which returns true. This means that when ManagerRole inherits EmployeeRole, the inherited methods behave differently, which might be unexpected. To mitigate this in the example above, <tt>ManagerRole#can_destroy_article?(article)</tt> is overridden to check if the Manager trying to destroy the role is the article owner.
 
 == Actors
 
@@ -12,30 +63,8 @@ Whatever class(es) you want all permissions to run through should include <tt>Ca
 	  default_role :employee
     end
 
-Actors represent objects in the system that want to preform an action. An actor's abilities are defined by the role(s) it plays, which is set by 
+Actors represent objects in the system that want to preform an action. An actor's abilities are defined by the role(s) it plays because the actor simply inherits any permission. Roles can be assigned to an actor ("played") by using the <tt>default_role(role)</tt> class method, or calling <tt>act(role)<tt> on an actor instance.
 
-== Roles
-
-The rules that govern your actors are defined in modules extending <tt>Canable::Role</tt> and/or each other.
-
-	module EmployeeRole
-	  include Canable::Role
-	  default_response false
-	end
-	
-	module ManagerRole
-	  include Canable::Role
-	  default_response true
-	end
-	
-== Ables
-
-    class Article
-      include MongoMapper::Document
-      include Canable::Ables
-    end
-
-Including Canable::Ables adds the able methods to the class including it. In this instance, any article instance now has viewable_by?(actor), creatable_by?(actor), updatable_by?(actor) and destroyable_by?(actor). Now
 
 Lets say an article can be viewed and created by anyone, but only updated or destroyed by the user that created the article. To do that, you could leave viewable_by? and creatable_by? alone as they default to true and just override the other methods.
 
