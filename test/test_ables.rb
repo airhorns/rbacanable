@@ -12,12 +12,12 @@ class AblesTest < Test::Unit::TestCase
     end
     
     context "viewable_by?" do
-       should "default to false" do
+       should "be false if user cannot view" do
          user = mock('user', :can_view? => false)
          assert ! @resource.viewable_by?(user)
        end
-
-       should "be false if resource is not viewable_by?" do
+       
+       should "be true if user can view" do
          user = mock('user', :can_view? => true)
          assert @resource.viewable_by?(user)
        end
@@ -26,15 +26,15 @@ class AblesTest < Test::Unit::TestCase
          assert ! @resource.viewable_by?(nil)
          assert ! @resource.viewable_by?('')
        end
-     end
+    end
      
      context "creatable_by?" do
-        should "default to false" do
+        should "be false if user cannot create" do
           user = mock('user', :can_create? => false)
           assert ! @resource.creatable_by?(user)
         end
 
-        should "be false if resource is not creatable_by?" do
+        should "be true if user can create" do
           user = mock('user', :can_create? => true)
           assert @resource.creatable_by?(user)
         end
@@ -46,12 +46,12 @@ class AblesTest < Test::Unit::TestCase
       end
       
       context "updatable_by?" do
-         should "default to false" do
+         should "be false if user cannot update" do
            user = mock('user', :can_update? => false)
            assert ! @resource.updatable_by?(user)
          end
 
-         should "be false if resource is not updatable_by?" do
+         should "be true if user can update" do
            user = mock('user', :can_update? => true)
            assert @resource.updatable_by?(user)
          end
@@ -63,12 +63,12 @@ class AblesTest < Test::Unit::TestCase
        end
        
        context "destroyable_by?" do
-          should "default to false" do
+          should "be false if user cannot destroy" do
             user = mock('user', :can_destroy? => false)
             assert ! @resource.destroyable_by?(user)
           end
 
-          should "be false if resource is not destroyable_by?" do
+          should "be true if user can destroy" do
             user = mock('user', :can_destroy? => true)
             assert @resource.destroyable_by?(user)
           end

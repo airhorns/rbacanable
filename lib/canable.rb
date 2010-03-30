@@ -60,7 +60,11 @@ module Canable
     # Sets the role of this actor by including a role module
     def role(role=nil)
       role ||= @role if @role
-      self.extend Canable::Roles.const_get((role.to_s.capitalize+"Role").intern)
+      if(role.respond_to?(:included))
+        self.extend role
+      else
+        self.extend Canable::Roles.const_get((role.to_s.capitalize+"Role").intern)
+      end
     end
   end
   
@@ -113,11 +117,13 @@ module Canable
     def self.add_can_method(can)
       Cans.module_eval <<-EOM
         def can_#{can}?(resource)
-          method = ("can_#{can}_"+resource.class.to_s.downcase+"?").intern
+          method = ("can_#{can}_"+resource.class.name.gsub(/::/,"_").downcase+"?").intern
           if self.respond_to?(method, true)
             self.send method, resource
-          else
+          elsif self.respond_to?(:_canable_default)
             self._canable_default
+          else
+            false
           end
         end
       EOM
@@ -125,9 +131,9 @@ module Canable
 
     def self.add_able_method(can, able)
       Ables.module_eval <<-EOM
-        def #{able}_by?(user)
-          return false if user.nil?
-          user.can_#{can}?(self)
+        def #{able}_by?(actor)
+          return false if actor.blank?
+          actor.can_#{can}?(self)
         end
       EOM
     end
