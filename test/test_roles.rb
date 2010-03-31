@@ -203,11 +203,11 @@ class RolesTest < Test::Unit::TestCase
           end
           
           def can_create_mocha_mock?(mock)
-            mock.owner == @name
+            self.can_update_mocha_mock?(mock)
           end
           
           def can_destroy_mocha_mock?(mock)
-            mock.owner == @name
+            self.can_update_mocha_mock?(mock)
           end
           
           def can_view_mocha_mock?(mock)
@@ -277,9 +277,9 @@ class RolesTest < Test::Unit::TestCase
       context "and resources that belong to them" do
         context "the owner of a resource" do
           setup do
-            @steves = mock('resource') do expects(:owner).returns("Steve").times(3) end
-            @harrys = mock('resource') do expects(:owner).returns("Harry").times(0) end
-            @carlis = mock('resource') do expects(:owner).returns("Carli").times(2) end
+            @steves = mock('resource1') do expects(:owner).returns("Steve").times(3) end
+            @harrys = mock('resource2') do expects(:owner).returns("Harry").times(0) end
+            @carlis = mock('resource3') do expects(:owner).returns("Carli").times(1) end
           end
           
           should "be able to CRUD their resource" do
