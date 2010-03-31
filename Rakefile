@@ -6,12 +6,12 @@ require File.dirname(__FILE__) + '/lib/canable'
 begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
-    gem.name        = "canable"
-    gem.summary     = %Q{Simple permissions that I have used on my last several projects so I figured it was time to abstract and wrap up into something more easily reusable.}
-    gem.description = %Q{Simple permissions that I have used on my last several projects so I figured it was time to abstract and wrap up into something more easily reusable.}
-    gem.email       = "nunemaker@gmail.com"
-    gem.homepage    = "http://github.com/jnunemaker/canable"
-    gem.authors     = ["John Nunemaker"]
+    gem.name        = "rbacanable"
+    gem.summary     = %Q{Simple role based permissions system}
+    gem.description = %Q{Simple role based permissions system}
+    gem.email       = "harry.brundage@gmail.com"
+    gem.homepage    = "http://github.com/hornairs/rbacanable"
+    gem.authors     = ["John Nunemaker", "Harry Brundage"]
     gem.version     = Canable::Version
     gem.add_development_dependency "shoulda", "2.10.3"
     gem.add_development_dependency "mocha", "0.9.8"
