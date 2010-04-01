@@ -47,9 +47,9 @@ end
 class User
   include Canable::Actor
   attr_accessor :name
-  
+  attr_accessor :role
   default_role Canable::Roles::BasicRole
-  # role_attribute :@role -- RBACanable by default looks in @role for a Module constant or string to use as a role
+  #role_attribute :@role #-- RBACanable by default looks in @role for a Module constant or string to use as a role
   
   def initialize(attributes = {})
     @name = attributes[:name]
@@ -90,10 +90,10 @@ posts = [
 
 
 user_table = table do |t|
-  t.headings = "User", "Resource", "Can View?", "Can Create?", "Can Update?", "Can Destroy?", "Role"
+  t.headings = "User", "Resource", "Can View?", "Can Create?", "Can Update?", "Can Destroy?", "@role", "Included Role"
   users.each do |user|
     posts.each do |post|
-      t << [user.to_s, post.to_s, user.can_view?(post), user.can_create?(post), user.can_update?(post), user.can_destroy?(post), user.canable_included_role]
+      t << [user.to_s, post.to_s, user.can_view?(post), user.can_create?(post), user.can_update?(post), user.can_destroy?(post), user.role, user.canable_included_role]
     end
   end
 end

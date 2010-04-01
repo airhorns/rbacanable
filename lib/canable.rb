@@ -1,5 +1,5 @@
 module Canable
-  Version = '0.1'
+  Version = '0.2'
 
   # Module that holds all the can_action? methods.
   module Cans; end
@@ -61,7 +61,8 @@ module Canable
     
     module ClassMethods
       attr_accessor :canable_default_role
-      attr_accessor :canable_role_attribute
+      attr_accessor :canable_role_proc
+      
       # ---------------
       # RBAC Actor building DSL
       # ---------------
@@ -71,9 +72,14 @@ module Canable
       end
       
       def role_attribute(attribute)
-        self.canable_role_attribute = attribute
+        self.canable_role_proc = Proc.new {|actor|
+          role = actor.instance_variable_get(attribute)
+        }
       end
       
+      def role_proc(proc)
+        self.canable_role_proc = proc
+      end
     end
     
     def initialize(*args)
@@ -83,9 +89,7 @@ module Canable
     end
     
     def __initialize_canable_role
-      attribute = self.class.canable_role_attribute
-      attribute ||= :@role
-      role_constant = self.instance_variable_get(attribute)
+      role_constant = self.__get_role_constant
       if role_constant == nil
         default_role = self.class.canable_default_role
         self.act(default_role) unless default_role == nil
@@ -94,14 +98,22 @@ module Canable
       end
     end
     
+    def __get_role_constant
+      if self.class.canable_role_proc.respond_to?(:call)
+        attribute = self.class.canable_role_proc.call(self)
+      elsif self.instance_variable_get(:@role)
+        attribute = @role
+      end
+      attribute || nil
+    end
+    
     # Sets the role of this actor by including a role module
     def act(role)
-      self.canable_included_role = role
-      if(role.respond_to?(:included))
-        self.extend role
-      else
-        self.extend Canable::Roles.const_get((role.to_s.capitalize+"Role").intern)
+      unless(role.respond_to?(:included))
+        role = Canable::Roles.const_get((role.to_s.capitalize+"Role").intern)
       end
+      self.extend role
+      self.canable_included_role = role
     end
   end
   
