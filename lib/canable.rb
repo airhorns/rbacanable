@@ -1,5 +1,5 @@
 module Canable
-  Version = '0.2'
+  Version = '0.2.1'
 
   # Module that holds all the can_action? methods.
   module Cans; end
@@ -9,7 +9,6 @@ module Canable
   
   # Module that is included by a role implementation
   module Role
-    include Cans # each role has a distinct set of responses to all the can_action? methods
     
     def self.included(base)
       base.extend(ClassMethods)
@@ -53,42 +52,24 @@ module Canable
   end
   
   module Actor
+    include Cans # each role has a distinct set of responses to all the can_action? methods
     attr_accessor :canable_included_role
-
+    
     def self.included(base)
       base.extend(ClassMethods)
     end
-    
-    module ClassMethods
-      attr_accessor :canable_default_role
-      attr_accessor :canable_role_proc
-      
-      # ---------------
-      # RBAC Actor building DSL
-      # ---------------
-      
-      def default_role(role)
-        self.canable_default_role = role
-      end
-      
-      def role_attribute(attribute)
-        self.canable_role_proc = Proc.new {|actor|
-          role = actor.instance_variable_get(attribute)
-        }
-      end
-      
-      def role_proc(proc)
-        self.canable_role_proc = proc
-      end
-    end
-    
-    def initialize(*args)
-      super(*args)
+
+    # Override attr_accessor to make sure the role has been included so that we can return an accurate value
+    # "lazy" role including
+    def canable_included_role
       self.__initialize_canable_role
-      self
+      @canable_included_role
     end
     
+    # Called every time a role is needed to make sure the lazy load has been completed
     def __initialize_canable_role
+      return if @_canable_initialized == true 
+      @_canable_intialize == true
       role_constant = self.__get_role_constant
       if role_constant == nil
         default_role = self.class.canable_default_role
@@ -114,6 +95,31 @@ module Canable
       end
       self.extend role
       self.canable_included_role = role
+    end
+    
+    
+      # ---------------
+      # RBAC Actor building DSL
+      # ---------------
+    
+    module ClassMethods
+      attr_accessor :canable_default_role
+      attr_accessor :canable_role_proc
+      
+      
+      def default_role(role)
+        self.canable_default_role = role
+      end
+      
+      def role_attribute(attribute)
+        self.canable_role_proc = Proc.new {|actor|
+          role = actor.instance_variable_get(attribute)
+        }
+      end
+      
+      def role_proc(proc)
+        self.canable_role_proc = proc
+      end
     end
   end
   
@@ -166,6 +172,7 @@ module Canable
     def self.add_can_method(can)
       Cans.module_eval <<-EOM
         def can_#{can}?(resource)
+          self.__initialize_canable_role if self.class.include?(Canable::Actor)
           method = ("can_#{can}_"+resource.class.name.gsub(/::/,"_").downcase+"?").intern
           if self.respond_to?(method, true)
             self.send method, resource

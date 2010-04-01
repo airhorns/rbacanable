@@ -134,7 +134,6 @@ class RolesTest < Test::Unit::TestCase
           
           def initialize(role=nil)
             @role = role
-            self.__initialize_canable_role # nessecary since initialize is overridden
           end
         end
         
@@ -164,7 +163,6 @@ class RolesTest < Test::Unit::TestCase
           
           def initialize(role=nil)
             @nonstandard = role
-            self.__initialize_canable_role # nessecary since initialize is overridden
           end
         end
         
@@ -196,7 +194,6 @@ class RolesTest < Test::Unit::TestCase
           def initialize(role=nil)
             @attributes = {}
             @attributes[:role] = role
-            self.__initialize_canable_role # nessecary since initialize is overridden
           end
         end
         
@@ -277,7 +274,6 @@ class RolesTest < Test::Unit::TestCase
           def initialize(_name, _role)
             @name = _name
             @role = _role
-            self.__initialize_canable_role # nessecary since initialize is overridden
           end         
         end
             

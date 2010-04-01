@@ -1,7 +1,7 @@
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 require 'rubygems'
-require 'active_support'
+require 'activesupport'
 require 'canable'
 require 'terminal-table/import'
 
@@ -54,7 +54,6 @@ class User
   def initialize(attributes = {})
     @name = attributes[:name]
     @role = attributes[:role]
-    self.__initialize_canable_role # nessecary since initialize is overridden
   end
   
   def to_s

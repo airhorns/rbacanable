@@ -1,7 +1,7 @@
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 require 'rubygems'
-require 'active_support'
+require 'activesupport'
 require 'canable'
 
 class User
@@ -12,7 +12,7 @@ class User
     @name = attributes[:name]
   end
   
-  def can_update_article(article)
+  def can_update_article?(article)
     article.creator == @name
   end
 end
