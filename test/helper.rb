@@ -14,6 +14,19 @@ $LOAD_PATH.unshift(File.dirname(__FILE__))
 require 'canable'
 
 class Test::Unit::TestCase
+  
+  def self.should_set_callback_attributes(test_value)
+    should "be called" do
+      assert ! subject.blank?
+    end
+    should "return proper options" do
+      assert_equal @user, subject[:can]
+      assert_equal @resource, subject[:able]
+      assert_equal :update, subject[:permission]
+      assert_equal test_value, subject[:test]
+    end
+  end
+  
 end
 
 def Doc(name=nil, &block)

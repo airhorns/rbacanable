@@ -1,7 +1,8 @@
 require 'rubygems'
 require 'rake'
 
-require File.dirname(__FILE__) + '/lib/canable'
+$LOAD_PATH << File.join(File.dirname(__FILE__), 'lib')
+require 'canable'
 
 begin
   require 'jeweler'
@@ -16,6 +17,8 @@ begin
     gem.add_development_dependency "shoulda", "2.10.3"
     gem.add_development_dependency "mocha", "0.9.8"
     gem.add_development_dependency "yard", ">= 0"
+    gem.add_development_dependency "activesupport", ">= 0"
+    
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
   end
   Jeweler::GemcutterTasks.new
