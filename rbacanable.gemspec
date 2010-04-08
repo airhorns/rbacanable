@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{rbacanable}
-  s.version = "0.2.1"
+  s.version = "0.2.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["John Nunemaker", "Harry Brundage"]
-  s.date = %q{2010-04-01}
+  s.date = %q{2010-04-07}
   s.description = %q{Simple role based permissions system}
   s.email = %q{harry.brundage@gmail.com}
   s.extra_rdoc_files = [
@@ -24,8 +24,15 @@ Gem::Specification.new do |s|
      "README.rdoc",
      "Rakefile",
      "examples/basic.rb",
+     "examples/callbacks.rb",
      "examples/roles.rb",
      "lib/canable.rb",
+     "lib/canable/actor.rb",
+     "lib/canable/canable.rb",
+     "lib/canable/cans.rb",
+     "lib/canable/enforcers.rb",
+     "lib/canable/role.rb",
+     "rbacanable.gemspec",
      "specs.watchr",
      "test/helper.rb",
      "test/test_ables.rb",
@@ -47,6 +54,7 @@ Gem::Specification.new do |s|
      "test/test_enforcers.rb",
      "test/test_roles.rb",
      "examples/basic.rb",
+     "examples/callbacks.rb",
      "examples/roles.rb"
   ]
 
@@ -58,15 +66,18 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<shoulda>, ["= 2.10.3"])
       s.add_development_dependency(%q<mocha>, ["= 0.9.8"])
       s.add_development_dependency(%q<yard>, [">= 0"])
+      s.add_development_dependency(%q<activesupport>, [">= 0"])
     else
       s.add_dependency(%q<shoulda>, ["= 2.10.3"])
       s.add_dependency(%q<mocha>, ["= 0.9.8"])
       s.add_dependency(%q<yard>, [">= 0"])
+      s.add_dependency(%q<activesupport>, [">= 0"])
     end
   else
     s.add_dependency(%q<shoulda>, ["= 2.10.3"])
     s.add_dependency(%q<mocha>, ["= 0.9.8"])
     s.add_dependency(%q<yard>, [">= 0"])
+    s.add_dependency(%q<activesupport>, [">= 0"])
   end
 end
 
